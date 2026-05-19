@@ -205,8 +205,7 @@ function doReset() {
     // Pass 3: if addon markers still present, restore the known-good clean file via git
     if (updated.includes('addon-title') || updated.includes('addon-section') || updated.includes('VAULTFLOWAI ADDON')) {
       process.stdout.write(clr(col.yellow, '\n  ⚠ Broken addon fragment detected — restoring clean base file...'));
-      const { execSync } = await import('child_process');
-      const clean = execSync('git show 9a3c61e:index.html', { cwd: new URL('.', import.meta.url).pathname, encoding: 'utf8' });
+      const clean = execSync('git show 9a3c61e:index.html', { cwd: __dir, encoding: 'utf8' });
       putFile(clean, sha, 'chore: reset to demo-ready state — restore clean base [vaultaireverse]');
       console.log(clr(col.bgreen, '\n  ✓ Done! Clean base restored.'));
       console.log(clr(col.gray, '  Netlify will update in ~30 seconds.\n'));
