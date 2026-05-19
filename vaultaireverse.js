@@ -102,6 +102,8 @@ function currentState() {
   try {
     const { content } = getFileInfo();
     if (content.includes('id="vaultflowai-addon"')) return 'addon';
+    if (content.includes('VAULTFLOWAI ADDON') || content.includes('VaultFlowAI Add-on')) return 'addon';
+    if (content.includes('addon-title') || content.includes('addon-section')) return 'addon';
     return 'demo';
   } catch { return 'unknown'; }
 }
@@ -170,24 +172,46 @@ function doReset() {
     process.stdout.write(clr(col.bcyan, '\n  → Reading live state from GitHub...'));
     const { sha, content } = getFileInfo();
 
-    if (!content.includes('id="vaultflowai-addon"')) {
+    const hasAddon = content.includes('id="vaultflowai-addon"')
+      || content.includes('VAULTFLOWAI ADDON')
+      || content.includes('VaultFlowAI Add-on')
+      || content.includes('addon-title')
+      || content.includes('addon-section');
+
+    if (!hasAddon) {
       console.log(clr(col.yellow, '\n  ✓ Already in DEMO READY state — no changes needed.\n'));
       return true;
     }
 
     let updated = content;
 
-    // Remove any block with id="vaultflowai-addon" — tag-agnostic (div, section, article, etc.)
-    // so it works regardless of what HTML tag Claude Code chooses to use
+    // Pass 1: remove blocks with id="vaultflowai-addon" — tag-agnostic
     updated = updated.replace(
       /\n?[ \t]*<!--[^\n]*[Vv]ault[Ff]low[^\n]*-->\n[ \t]*<\w+[^>]+id="vaultflowai-addon"[\s\S]*?<\/\w+>\n/g,
       '\n'
     );
-    // Also catch blocks without a preceding comment
     updated = updated.replace(
       /\n?[ \t]*<\w+[^>]+id="vaultflowai-addon"[\s\S]*?<\/\w+>\n/g,
       '\n'
     );
+
+    // Pass 2: strip orphaned addon fragments (broken writes without an id on the opening tag)
+    // Remove everything between an addon comment and <!-- CTA BANNER -->
+    updated = updated.replace(
+      /\n?[ \t]*<!--[^\n]*VAULTFLOWAI[^\n]*-->[\s\S]*?([ \t]*<!-- CTA BANNER -->)/g,
+      '\n\n  $1'
+    );
+
+    // Pass 3: if addon markers still present, restore the known-good clean file via git
+    if (updated.includes('addon-title') || updated.includes('addon-section') || updated.includes('VAULTFLOWAI ADDON')) {
+      process.stdout.write(clr(col.yellow, '\n  ⚠ Broken addon fragment detected — restoring clean base file...'));
+      const { execSync } = await import('child_process');
+      const clean = execSync('git show 9a3c61e:index.html', { cwd: new URL('.', import.meta.url).pathname, encoding: 'utf8' });
+      putFile(clean, sha, 'chore: reset to demo-ready state — restore clean base [vaultaireverse]');
+      console.log(clr(col.bgreen, '\n  ✓ Done! Clean base restored.'));
+      console.log(clr(col.gray, '  Netlify will update in ~30 seconds.\n'));
+      return true;
+    }
 
     process.stdout.write(clr(col.bcyan, ' pushing demo-ready state...'));
     putFile(updated, sha, 'chore: reset to demo-ready state — remove VaultFlowAI add-on [vaultaireverse]');
