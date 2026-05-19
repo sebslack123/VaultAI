@@ -1,0 +1,22 @@
+{
+  "name": "vaultaireverse",
+  "version": "1.0.0",
+  "description": "Demo state manager for VaultAI — add/remove VaultFlowAI add-on for demos",
+  "type": "module",
+  "bin": {
+    "vaultaireverse": "./vaultaireverse.js"
+  },
+  "scripts": {
+    "start": "node vaultaireverse.js",
+    "reset": "node vaultaireverse.js reset",
+    "addon": "node vaultaireverse.js addon",
+    "status": "node vaultaireverse.js status"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@inquirer/prompts": "^8.4.2",
+    "figlet": "^1.11.0"
+  }
+}
