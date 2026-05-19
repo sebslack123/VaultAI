@@ -113,7 +113,7 @@ function getStatusLine() {
   const stateStr = state === 'demo'
     ? clr(col.bgreen + col.bold, '● DEMO READY')
     : state === 'addon'
-    ? clr(col.bcyan + col.bold,  '● VAULTFLOWAI ADD-ON ACTIVE')
+    ? clr(col.bcyan + col.bold,  '● FIXED')
     : clr(col.yellow, '● UNKNOWN');
 
   return { state, stateStr };
@@ -132,7 +132,7 @@ function printStatus() {
   if (state === 'demo') {
     console.log(`  ${clr(col.bgreen, '✓')} Pricing is demo-ready — no VaultFlowAI add-on visible`);
   } else if (state === 'addon') {
-    console.log(`  ${clr(col.bcyan, '✓')} VaultFlowAI add-on is active in pricing — reset to hide it`);
+    console.log(`  ${clr(col.bcyan, '✓')} VaultFlowAI add-on is live — reset to remove it`);
   }
   console.log('');
 }
@@ -175,7 +175,11 @@ function doReset() {
       return true;
     }
 
-    const updated = content.replace(ADDON_WITH_ANCHOR, ADDON_ANCHOR);
+    // Strip the entire add-on block (comment + div) regardless of whitespace variations
+    const updated = content.replace(
+      /\n[ \t]*<!-- VAULTFLOWAI ADD-ON -->[\s\S]*?<\/div>\n[ \t]*<\/div>\n/,
+      '\n'
+    );
 
     process.stdout.write(clr(col.bcyan, ' pushing demo-ready state...'));
     putFile(updated, sha, 'chore: reset to demo-ready state — remove VaultFlowAI add-on [vaultaireverse]');
