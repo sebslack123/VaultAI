@@ -101,7 +101,7 @@ function putFile(content, sha, message) {
 function currentState() {
   try {
     const { content } = getFileInfo();
-    if (content.includes('VaultFlowAI — up to 50 workflows')) return 'addon';
+    if (content.includes('id="vaultflowai-addon"')) return 'addon';
     return 'demo';
   } catch { return 'unknown'; }
 }
@@ -138,23 +138,48 @@ function printStatus() {
 }
 
 // ── Core operations ────────────────────────────────────────
+const ADDON_BLOCK = `
+      <!-- VAULTFLOWAI ADD-ON -->
+      <div class="addon-block" id="vaultflowai-addon">
+        <div class="addon-inner">
+          <div class="addon-badge">Add-on</div>
+          <div class="addon-info">
+            <div class="addon-title">VaultFlowAI — AI Workflow Orchestration</div>
+            <div class="addon-desc">Add the full VaultFlowAI engine to any plan. Drag-and-drop AI workflow builder, document intelligence for AML &amp; KYC, human-in-the-loop approval gates, and real-time SLA monitoring — all auditable and DORA-compliant by design.</div>
+            <div class="addon-features">
+              <span>Up to 500 active workflows</span>
+              <span>Multi-model AI routing</span>
+              <span>Full audit trail on every inference</span>
+              <span>Priority support</span>
+            </div>
+          </div>
+          <div class="addon-price-col">
+            <div class="addon-price">€ 2,900<span>/mo</span></div>
+            <div class="addon-note">Per plan, billed monthly</div>
+            <a href="#" class="btn-primary">Add to plan →</a>
+          </div>
+        </div>
+      </div>
+`;
+
+const ADDON_ANCHOR = '    </div>\n  </section>\n\n  <!-- CTA BANNER -->';
+const ADDON_WITH_ANCHOR = ADDON_BLOCK + '\n    </div>\n  </section>\n\n  <!-- CTA BANNER -->';
+
 function doReset() {
   try {
     process.stdout.write(clr(col.bcyan, '\n  → Reading live state from GitHub...'));
     const { sha, content } = getFileInfo();
 
-    const updated = content
-      .replace(/[ \t]*<li>VaultFlowAI — up to 50 workflows<\/li>\n/g, '')
-      .replace(/[ \t]*<li>VaultFlowAI — unlimited workflows<\/li>\n/g, '');
-
-    if (updated === content) {
+    if (!content.includes('id="vaultflowai-addon"')) {
       console.log(clr(col.yellow, '\n  ✓ Already in DEMO READY state — no changes needed.\n'));
       return true;
     }
 
+    const updated = content.replace(ADDON_WITH_ANCHOR, ADDON_ANCHOR);
+
     process.stdout.write(clr(col.bcyan, ' pushing demo-ready state...'));
     putFile(updated, sha, 'chore: reset to demo-ready state — remove VaultFlowAI add-on [vaultaireverse]');
-    console.log(clr(col.bgreen, '\n  ✓ Done! VaultFlowAI removed from pricing.'));
+    console.log(clr(col.bgreen, '\n  ✓ Done! VaultFlowAI add-on removed from pricing.'));
     console.log(clr(col.gray,   '  Netlify will update in ~30 seconds.\n'));
     return true;
   } catch (e) {
@@ -168,23 +193,15 @@ function doAddAddon() {
     process.stdout.write(clr(col.bcyan, '\n  → Reading live state from GitHub...'));
     const { sha, content } = getFileInfo();
 
-    if (content.includes('VaultFlowAI — up to 50 workflows')) {
+    if (content.includes('id="vaultflowai-addon"')) {
       console.log(clr(col.yellow, '\n  ✓ VaultFlowAI add-on already active — no changes needed.\n'));
       return true;
     }
 
-    const updated = content
-      .replace(
-        /(\s*)(<li>VaultTransact — up to 1M tx\/month<\/li>)/,
-        '$1<li>VaultFlowAI — up to 50 workflows</li>\n$1$2'
-      )
-      .replace(
-        /(\s*)(<li>VaultTransact — up to 50M tx\/month<\/li>)/,
-        '$1<li>VaultFlowAI — unlimited workflows</li>\n$1$2'
-      );
+    const updated = content.replace(ADDON_ANCHOR, ADDON_WITH_ANCHOR);
 
     process.stdout.write(clr(col.bcyan, ' pushing add-on state...'));
-    putFile(updated, sha, 'feat: add VaultFlowAI add-on to pricing plans [vaultaireverse]');
+    putFile(updated, sha, 'feat: add VaultFlowAI add-on to pricing section [vaultaireverse]');
     console.log(clr(col.bgreen, '\n  ✓ Done! VaultFlowAI add-on is now visible in pricing.'));
     console.log(clr(col.gray,   '  Netlify will update in ~30 seconds.\n'));
     return true;
