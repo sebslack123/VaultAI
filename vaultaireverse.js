@@ -175,24 +175,17 @@ function doReset() {
       return true;
     }
 
-    // Remove any orphaned HTML between </div></section> and <!-- CTA BANNER -->
-    // and any addon divs outside the section — handles whatever Claude Code wrote
     let updated = content;
 
-    // 1. Strip everything between the pricing-grid closing </div></section> and <!-- CTA BANNER -->
-    //    leaving just the clean section close + CTA comment
+    // Remove any comment + div combo with id="vaultflowai-addon" — handles whatever Claude Code wrote
+    // Uses a non-greedy match anchored to the specific id so it never touches other content
     updated = updated.replace(
-      /([ \t]*<\/div>\n[ \t]*<\/section>)\s*([\s\S]*?)[ \t]*(<!-- CTA BANNER -->)/,
-      '$1\n\n  $3'
-    );
-
-    // 2. Strip any standalone addon-block divs that ended up outside <section> (with optional preceding comment)
-    updated = updated.replace(
-      /\n[ \t]*<!--[^>]*[Aa]dd-?[Oo]n[^>]*-->\n[ \t]*<div[^>]+id="vaultflowai-addon"[\s\S]*?<\/div>\n/g,
+      /\n?[ \t]*<!--[^\n]*[Vv]ault[Ff]low[^\n]*-->\n[ \t]*<div[^>]+id="vaultflowai-addon"[\s\S]*?<\/div>\n/g,
       '\n'
     );
+    // Also catch blocks without a preceding comment
     updated = updated.replace(
-      /\n[ \t]*<div[^>]+id="vaultflowai-addon"[\s\S]*?<\/div>\n/g,
+      /\n?[ \t]*<div[^>]+id="vaultflowai-addon"[\s\S]*?<\/div>\n/g,
       '\n'
     );
 
