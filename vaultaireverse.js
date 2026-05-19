@@ -177,15 +177,15 @@ function doReset() {
 
     let updated = content;
 
-    // Remove any comment + div combo with id="vaultflowai-addon" — handles whatever Claude Code wrote
-    // Uses a non-greedy match anchored to the specific id so it never touches other content
+    // Remove any block with id="vaultflowai-addon" — tag-agnostic (div, section, article, etc.)
+    // so it works regardless of what HTML tag Claude Code chooses to use
     updated = updated.replace(
-      /\n?[ \t]*<!--[^\n]*[Vv]ault[Ff]low[^\n]*-->\n[ \t]*<div[^>]+id="vaultflowai-addon"[\s\S]*?<\/div>\n/g,
+      /\n?[ \t]*<!--[^\n]*[Vv]ault[Ff]low[^\n]*-->\n[ \t]*<\w+[^>]+id="vaultflowai-addon"[\s\S]*?<\/\w+>\n/g,
       '\n'
     );
     // Also catch blocks without a preceding comment
     updated = updated.replace(
-      /\n?[ \t]*<div[^>]+id="vaultflowai-addon"[\s\S]*?<\/div>\n/g,
+      /\n?[ \t]*<\w+[^>]+id="vaultflowai-addon"[\s\S]*?<\/\w+>\n/g,
       '\n'
     );
 
