@@ -101,7 +101,7 @@ function putFile(content, sha, message) {
 function currentState() {
   try {
     const { content } = getFileInfo();
-    const clean = execSync('git show 9a3c61e:index.html', { cwd: __dir, encoding: 'utf8' });
+    const clean = execSync('git show ac5ec7d:index.html', { cwd: __dir, encoding: 'utf8' });
     if (content !== clean) return 'addon';
     return 'demo';
   } catch { return 'unknown'; }
@@ -171,7 +171,7 @@ function doReset() {
     process.stdout.write(clr(col.bcyan, '\n  → Restoring clean demo-ready file...'));
     const { sha } = getFileInfo();
     // Always restore from the known-good clean snapshot — immune to whatever Claude Code wrote
-    const clean = execSync('git show 9a3c61e:index.html', { cwd: __dir, encoding: 'utf8' });
+    const clean = execSync('git show ac5ec7d:index.html', { cwd: __dir, encoding: 'utf8' });
     putFile(clean, sha, 'chore: reset to demo-ready state [vaultaireverse]');
     console.log(clr(col.bgreen, '\n  ✓ Done! Pricing page restored to demo-ready state.'));
     console.log(clr(col.gray,   '  Netlify will update in ~30 seconds.\n'));
