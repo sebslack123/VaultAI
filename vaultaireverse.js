@@ -2,8 +2,9 @@
 // VaultAI Reverse — interactive demo state manager for VaultAI
 
 import { execSync } from 'child_process';
+import { readFileSync } from 'fs';
 import { createRequire } from 'module';
-import { dirname } from 'path';
+import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dir = dirname(fileURLToPath(import.meta.url));
@@ -101,8 +102,8 @@ function putFile(content, sha, message) {
 function currentState() {
   try {
     const { content } = getFileInfo();
-    const clean = execSync('git show ac5ec7d:index.html', { cwd: __dir, encoding: 'utf8' });
-    if (content !== clean) return 'addon';
+    if (content.includes('<!--ADDON-START')) return 'demo';
+    if (content.includes('id="vaultflowai-addon"')) return 'addon';
     return 'demo';
   } catch { return 'unknown'; }
 }
@@ -138,41 +139,18 @@ function printStatus() {
   console.log('');
 }
 
+// ── Hardcoded page states (immune to git history / rebase divergence) ─────
+const INDEX_DEMO  = readFileSync(join(__dir, 'index.html'), 'utf8');
+const INDEX_FIXED = INDEX_DEMO
+  .replace('<!--ADDON-START\n', '')
+  .replace('\n  ADDON-END-->', '');
+
 // ── Core operations ────────────────────────────────────────
-const ADDON_BLOCK = `
-      <!-- VAULTFLOWAI ADD-ON -->
-      <div class="addon-block" id="vaultflowai-addon">
-        <div class="addon-inner">
-          <div class="addon-badge">Add-on</div>
-          <div class="addon-info">
-            <div class="addon-title">VaultFlowAI — AI Workflow Orchestration</div>
-            <div class="addon-desc">Add the full VaultFlowAI engine to any plan. Drag-and-drop AI workflow builder, document intelligence for AML &amp; KYC, human-in-the-loop approval gates, and real-time SLA monitoring — all auditable and DORA-compliant by design.</div>
-            <div class="addon-features">
-              <span>Up to 500 active workflows</span>
-              <span>Multi-model AI routing</span>
-              <span>Full audit trail on every inference</span>
-              <span>Priority support</span>
-            </div>
-          </div>
-          <div class="addon-price-col">
-            <div class="addon-price">€ 2,900<span>/mo</span></div>
-            <div class="addon-note">Per plan, billed monthly</div>
-            <a href="#" class="btn-primary">Add to plan →</a>
-          </div>
-        </div>
-      </div>
-`;
-
-const ADDON_ANCHOR = '    </div>\n  </section>\n\n  <!-- CTA BANNER -->';
-const ADDON_WITH_ANCHOR = ADDON_BLOCK + '\n    </div>\n  </section>\n\n  <!-- CTA BANNER -->';
-
 function doReset() {
   try {
     process.stdout.write(clr(col.bcyan, '\n  → Restoring clean demo-ready file...'));
     const { sha } = getFileInfo();
-    // Always restore from the known-good clean snapshot — immune to whatever Claude Code wrote
-    const clean = execSync('git show ac5ec7d:index.html', { cwd: __dir, encoding: 'utf8' });
-    putFile(clean, sha, 'chore: reset to demo-ready state [vaultaireverse]');
+    putFile(INDEX_DEMO, sha, 'chore: reset to demo-ready state [vaultaireverse]');
     console.log(clr(col.bgreen, '\n  ✓ Done! Pricing page restored to demo-ready state.'));
     console.log(clr(col.gray,   '  Netlify will update in ~30 seconds.\n'));
     return true;
@@ -184,18 +162,9 @@ function doReset() {
 
 function doAddAddon() {
   try {
-    process.stdout.write(clr(col.bcyan, '\n  → Reading live state from GitHub...'));
-    const { sha, content } = getFileInfo();
-
-    if (content.includes('id="vaultflowai-addon"')) {
-      console.log(clr(col.yellow, '\n  ✓ VaultFlowAI add-on already active — no changes needed.\n'));
-      return true;
-    }
-
-    const updated = content.replace(ADDON_ANCHOR, ADDON_WITH_ANCHOR);
-
-    process.stdout.write(clr(col.bcyan, ' pushing add-on state...'));
-    putFile(updated, sha, 'feat: add VaultFlowAI add-on to pricing section [vaultaireverse]');
+    process.stdout.write(clr(col.bcyan, '\n  → Pushing add-on state...'));
+    const { sha } = getFileInfo();
+    putFile(INDEX_FIXED, sha, 'feat: add VaultFlowAI add-on to pricing [vaultaireverse]');
     console.log(clr(col.bgreen, '\n  ✓ Done! VaultFlowAI add-on is now visible in pricing.'));
     console.log(clr(col.gray,   '  Netlify will update in ~30 seconds.\n'));
     return true;
